@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { AppError } from '../../errors/AppError';
-import { CreateUserDTO } from './users.dtos';
+import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
 import { UsersRepository } from './users.repository';
 
 export class UsersService {
@@ -27,5 +27,42 @@ export class UsersService {
 
     const { password: _, ...usersWithoutPassword } = newUser;
     return usersWithoutPassword;
+  }
+
+  async update(id: string, data: UpdateUserDTO) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404);
+    }
+
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+
+    const updatedUser = await this.usersRepository.update(id, data);
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  }
+
+  async replace(id: string, data: ReplaceUserDTO) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404);
+    }
+
+    data.password = await bcrypt.hash(data.password, 10);
+
+    const replacedUser = await this.usersRepository.replace(id, data);
+    const { password: _, ...userWithoutPassword } = replacedUser;
+    return userWithoutPassword;
+  }
+
+  async delete(id: string) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404);
+    }
+
+    await this.usersRepository.delete(id);
   }
 }
