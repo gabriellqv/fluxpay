@@ -1,5 +1,5 @@
 import { prisma } from '../../config/prisma';
-import { CreateUserDTO, UpdateUserDTO } from './users.dtos';
+import { CreateUserDTO, UpdateUserDTO, ReplaceUserDTO } from './users.dtos';
 export class UserRepository {
   async findById(id: string) {
     return prisma.user.findUnique({
@@ -29,6 +29,13 @@ export class UserRepository {
   }
 
   async update(id: string, data: UpdateUserDTO) {
+    return prisma.user.update({
+      where: { id },
+      data: { ...data },
+    });
+  }
+
+  async replace(id: string, data: ReplaceUserDTO) {
     return prisma.user.update({
       where: { id },
       data: {
