@@ -58,3 +58,5 @@ Thumbs.db
 *.sw?
 
 /src/generated/prisma
+
+/src/generated/prisma

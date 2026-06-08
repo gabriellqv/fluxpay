@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  cpf       String   @unique
+  password  String
+  balance   Decimal  @default(100.00)
+  createdAt DateTime @default(now())
+  sentTransactions     Transaction[] @relation("SenderRelation")
+  receivedTransactions Transaction[] @relation("ReceiverRelation")
+  @@map("users")
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  amount    Decimal
+  createdAt DateTime @default(now())
+  senderId  String
+  sender    User     @relation("SenderRelation", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User    @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  @@map("transactions")
+}
