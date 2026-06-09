@@ -1,6 +1,9 @@
 import { prisma } from '../../config/prisma';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
 export class UsersRepository {
+  async findAll() {
+    return prisma.user.findMany();
+  }
   async findById(id: string) {
     return prisma.user.findUnique({
       where: { id },
