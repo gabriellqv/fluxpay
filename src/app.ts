@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from 'express';
+import { ZodError } from 'zod';
 import { AppError } from './errors/AppError';
 import { usersRoutes } from './modules/users/users.routes';
 
@@ -20,6 +21,16 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
     return;
   }
+
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      status: 'validation_error',
+      message: 'Erro de validação nos dados enviados.',
+      errors: err.format(),
+    });
+    return;
+  }
+
   console.error(err);
   res.status(500).json({
     status: 'error',
