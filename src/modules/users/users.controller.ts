@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createUserSchema, updateUserSchema, replaceUserSchema } from './users.dtos';
+import { createUserSchema, replaceUserSchema, updateUserSchema } from './users.dtos';
 import { UsersService } from './users.service';
 
 export class UsersController {
@@ -26,5 +26,15 @@ export class UsersController {
   delete = async (req: Request, res: Response) => {
     await this.usersService.delete(String(req.params.id));
     res.status(204).send();
+  };
+
+  findAll = async (req: Request, res: Response) => {
+    const users = await this.usersService.findAll();
+    res.status(200).json(users);
+  };
+
+  findById = async (req: Request, res: Response) => {
+    const user = await this.usersService.findById(String(req.params.id));
+    res.status(200).json(user);
   };
 }

@@ -6,6 +6,42 @@ import { UsersRepository } from './users.repository';
 export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
+  async findAll() {
+    const users = await this.usersRepository.findAll();
+
+    return users.map((user) => {
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+  }
+
+  async findById(id: string) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Este usuário não foi encontrado.', 404);
+    }
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async findByCpf(cpf: string) {
+    const user = await this.usersRepository.findByCpf(cpf);
+    if (!user) {
+      throw new AppError('Este usuário não foi encontrado.', 404);
+    }
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async findByEmail(email: string) {
+    const user = await this.usersRepository.findByEmail(email);
+    if (!user) {
+      throw new AppError('Este usuário não foi encontrado.', 404);
+    }
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
   async create(data: CreateUserDTO) {
     const userExists = await this.usersRepository.findByEmail(data.email);
 
