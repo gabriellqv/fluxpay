@@ -4,19 +4,19 @@ This project is the API for Flux Pay, a modern financial platform. The system al
 
 ## Technologies
 
-* Node.js with TypeScript
-* Express
-* Prisma ORM
-* PostgreSQL
-* Zod for Data Validation
-* Vitest for Unit Testing
+- Node.js with TypeScript
+- Express
+- Prisma ORM
+- PostgreSQL
+- Zod for Data Validation
+- Vitest for Unit Testing
 
 ## Installation and Execution
 
 ### Prerequisites
 
-* Node.js
-* PostgreSQL
+- Node.js
+- PostgreSQL
 
 ### Steps to run locally
 

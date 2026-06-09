@@ -1,0 +1,18 @@
+name: fluxpay
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: fluxpay-db
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: fluxpay
+    ports:
+      - '5432:5432'
+    volumes:
+      - fluxpay-db-data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  fluxpay-db-data:
