@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
-export class UsersRepository {
+import { IUsersRepository } from './users.repository.interface';
+export class UsersRepository implements IUsersRepository {
   async findAll() {
     return prisma.user.findMany();
   }

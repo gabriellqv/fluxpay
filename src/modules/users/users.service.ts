@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import { AppError } from '../../errors/AppError';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
-import { UsersRepository } from './users.repository';
+import { IUsersRepository } from './users.repository.interface';
 
 export class UsersService {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(private usersRepository: IUsersRepository) {}
 
   async findAll() {
     const users = await this.usersRepository.findAll();
