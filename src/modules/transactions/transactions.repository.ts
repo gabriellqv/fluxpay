@@ -1,4 +1,5 @@
-import { prisma, Transaction } from '../../config/prisma';
+import { Transaction } from '@prisma/client';
+import { prisma } from '../../config/prisma';
 import { CreateTransactionDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
 
