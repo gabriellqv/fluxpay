@@ -1,8 +1,6 @@
-import { PrismaClient, Transaction } from '@prisma/client';
+import { prisma, Transaction } from '../../config/prisma';
 import { CreateTransactionDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
-
-const prisma = new PrismaClient();
 
 export class TransactionsRepository implements ITransactionsRepository {
   async create(data: CreateTransactionDTO): Promise<Transaction> {
