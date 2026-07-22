@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authMiddleware } from '../../middlewares/auth.middleware';
 import { transactionsController } from '../../registry';
 
 const transactionsRoutes = Router();
@@ -31,6 +32,6 @@ registry.registerPath({
   },
 });
 
-transactionsRoutes.post('/', transactionsController.create);
+transactionsRoutes.post('/', authMiddleware, transactionsController.create);
 
 export { transactionsRoutes };
