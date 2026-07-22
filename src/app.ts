@@ -1,10 +1,11 @@
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { generateOpenApiDocument } from './config/swagger';
 import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter, sensitiveRateLimiter } from './middlewares/rateLimiter';
+import { authRoutes } from './modules/auth/auth.routes';
 import { transactionsRoutes } from './modules/transactions/transactions.routes';
 import { usersRoutes } from './modules/users/users.routes';
 
@@ -18,6 +19,7 @@ app.use(globalRateLimiter);
 const swaggerDocument = generateOpenApiDocument();
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use('/auth', sensitiveRateLimiter, authRoutes);
 app.use('/users', usersRoutes);
 app.use('/transactions', sensitiveRateLimiter, transactionsRoutes);
 
