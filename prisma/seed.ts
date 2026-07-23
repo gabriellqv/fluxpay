@@ -23,7 +23,7 @@ async function main() {
     update: {},
     create: {
       name: 'Bob Esponja',
-      email: 'bobsiricascudo@email.com',
+      email: 'bob@email.com',
       cpf: '55566677788',
       password: passwordHash,
       balance: 300.0,
