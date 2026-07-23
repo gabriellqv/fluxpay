@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { env } from '../../config/env';
 import { AppError } from '../../errors/AppError';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { AuthService } from './auth.service';
@@ -43,9 +44,6 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    process.env.JWT_SECRET = 'test-secret';
-    process.env.JWT_EXPIRES_IN = '1d';
     sut = new AuthService(mockUsersRepository);
   });
 
@@ -84,8 +82,8 @@ describe('AuthService', () => {
 
       expect(jwt.sign).toHaveBeenCalledWith(
         { name: 'John Doe', email: 'john@email.com' },
-        'test-secret',
-        { subject: 'user-id', expiresIn: '1d' },
+        env.JWT_SECRET,
+        { subject: 'user-id', expiresIn: env.JWT_EXPIRES_IN },
       );
     });
   });

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env';
 import { AppError } from '../errors/AppError';
 
 interface TokenPayload {
@@ -21,13 +22,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     throw new AppError('Formato de token inválido. Use "Bearer <token>".', 401);
   }
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new AppError('Erro interno de configuração de segurança.', 500);
-  }
-
   try {
-    const decoded = jwt.verify(token, secret) as TokenPayload;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as TokenPayload;
 
     req.userId = decoded.sub;
 
