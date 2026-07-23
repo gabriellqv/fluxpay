@@ -27,5 +27,8 @@ model Transaction {
   sender    User     @relation("SenderRelation", fields: [senderId], references: [id])
   receiverId String
   receiver   User    @relation("ReceiverRelation", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
   @@map("transactions")
 }
