@@ -16,7 +16,7 @@ export class UsersService {
   async findById(id: string) {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new AppError('Este usuário não foi encontrado.', 404);
+      throw new AppError('Este usuário não foi encontrado.', 404, 'USER_NOT_FOUND');
     }
     return excludePassword(user);
   }
@@ -24,7 +24,7 @@ export class UsersService {
   async findByCpf(cpf: string) {
     const user = await this.usersRepository.findByCpf(cpf);
     if (!user) {
-      throw new AppError('Este usuário não foi encontrado.', 404);
+      throw new AppError('Este usuário não foi encontrado.', 404, 'USER_NOT_FOUND');
     }
     return excludePassword(user);
   }
@@ -32,7 +32,7 @@ export class UsersService {
   async findByEmail(email: string) {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) {
-      throw new AppError('Este usuário não foi encontrado.', 404);
+      throw new AppError('Este usuário não foi encontrado.', 404, 'USER_NOT_FOUND');
     }
     return excludePassword(user);
   }
@@ -41,12 +41,16 @@ export class UsersService {
     const userExists = await this.usersRepository.findByEmail(data.email);
 
     if (userExists) {
-      throw new AppError('Este e-mail já está sendo utilizado por outro usuário.', 409);
+      throw new AppError(
+        'Este e-mail já está sendo utilizado por outro usuário.',
+        409,
+        'EMAIL_ALREADY_EXISTS',
+      );
     }
 
     const cpfExists = await this.usersRepository.findByCpf(data.cpf);
     if (cpfExists) {
-      throw new AppError('Este CPF já está cadastrado no sistema.', 409);
+      throw new AppError('Este CPF já está cadastrado no sistema.', 409, 'CPF_ALREADY_EXISTS');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -62,7 +66,7 @@ export class UsersService {
   async update(id: string, data: UpdateUserDTO) {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new AppError('Usuário não encontrado.', 404);
+      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
     }
 
     if (data.password) {
@@ -76,7 +80,7 @@ export class UsersService {
   async replace(id: string, data: ReplaceUserDTO) {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new AppError('Usuário não encontrado.', 404);
+      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
     }
 
     data.password = await bcrypt.hash(data.password, 10);
@@ -88,7 +92,7 @@ export class UsersService {
   async delete(id: string) {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new AppError('Usuário não encontrado.', 404);
+      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
     }
 
     await this.usersRepository.delete(id);

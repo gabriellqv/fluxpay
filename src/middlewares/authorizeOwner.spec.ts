@@ -26,7 +26,7 @@ describe('authorizeOwner Middleware', () => {
     req.userId = undefined;
 
     expect(() => authorizeOwner(req as Request, res as Response, next)).toThrow(
-      new AppError('Usuário não autenticado.', 401),
+      new AppError('Usuário não autenticado.', 401, 'UNAUTHENTICATED'),
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -35,7 +35,7 @@ describe('authorizeOwner Middleware', () => {
     req.userId = 'different-user-456';
 
     expect(() => authorizeOwner(req as Request, res as Response, next)).toThrow(
-      new AppError('Acesso não autorizado a estes dados.', 403),
+      new AppError('Acesso não autorizado a estes dados.', 403, 'FORBIDDEN'),
     );
     expect(next).not.toHaveBeenCalled();
   });

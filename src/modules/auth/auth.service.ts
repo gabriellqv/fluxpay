@@ -12,12 +12,12 @@ export class AuthService {
   async login(data: LoginDTO) {
     const user = await this.usersRepository.findByEmail(data.email);
     if (!user) {
-      throw new AppError('E-mail ou senha incorretos.', 401);
+      throw new AppError('E-mail ou senha incorretos.', 401, 'INVALID_CREDENTIALS');
     }
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) {
-      throw new AppError('E-mail ou senha incorretos.', 401);
+      throw new AppError('E-mail ou senha incorretos.', 401, 'INVALID_CREDENTIALS');
     }
 
     const token = jwt.sign({ name: user.name, email: user.email }, env.JWT_SECRET, {
