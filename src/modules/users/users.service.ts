@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { AppError } from '../../errors/AppError';
+import { excludePassword } from '../../utils/excludePassword';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
 import { IUsersRepository } from './users.repository.interface';
 
@@ -9,10 +10,7 @@ export class UsersService {
   async findAll() {
     const users = await this.usersRepository.findAll();
 
-    return users.map((user) => {
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
+    return users.map((user) => excludePassword(user));
   }
 
   async findById(id: string) {
@@ -20,8 +18,7 @@ export class UsersService {
     if (!user) {
       throw new AppError('Este usuário não foi encontrado.', 404);
     }
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return excludePassword(user);
   }
 
   async findByCpf(cpf: string) {
@@ -29,8 +26,7 @@ export class UsersService {
     if (!user) {
       throw new AppError('Este usuário não foi encontrado.', 404);
     }
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return excludePassword(user);
   }
 
   async findByEmail(email: string) {
@@ -38,8 +34,7 @@ export class UsersService {
     if (!user) {
       throw new AppError('Este usuário não foi encontrado.', 404);
     }
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return excludePassword(user);
   }
 
   async create(data: CreateUserDTO) {
@@ -61,8 +56,7 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    const { password: _, ...usersWithoutPassword } = newUser;
-    return usersWithoutPassword;
+    return excludePassword(newUser);
   }
 
   async update(id: string, data: UpdateUserDTO) {
@@ -76,8 +70,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.usersRepository.update(id, data);
-    const { password: _, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    return excludePassword(updatedUser);
   }
 
   async replace(id: string, data: ReplaceUserDTO) {
@@ -89,8 +82,7 @@ export class UsersService {
     data.password = await bcrypt.hash(data.password, 10);
 
     const replacedUser = await this.usersRepository.replace(id, data);
-    const { password: _, ...userWithoutPassword } = replacedUser;
-    return userWithoutPassword;
+    return excludePassword(replacedUser);
   }
 
   async delete(id: string) {
