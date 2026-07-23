@@ -1,6 +1,6 @@
 import { AppError } from '../../errors/AppError';
 import { IUsersRepository } from '../users/users.repository.interface';
-import { CreateTransactionDTO } from './transactions.dtos';
+import { CreateTransactionDTO, GetTransactionHistoryQueryDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
 
 export class TransactionsService {
@@ -32,5 +32,32 @@ export class TransactionsService {
 
     const transaction = await this.transactionsRepository.create({ senderId, receiverId, amount });
     return transaction;
+  }
+
+  async getHistory(userId: string, query: GetTransactionHistoryQueryDTO) {
+    const { page, limit } = query;
+    const { transactions, total } = await this.transactionsRepository.findHistoryByUserId(
+      userId,
+      page,
+      limit,
+    );
+
+    const formattedTransactions = transactions.map((t) => ({
+      id: t.id,
+      amount: t.amount,
+      type: t.senderId === userId ? 'SENT' : 'RECEIVED',
+      createdAt: t.createdAt,
+      counterparty: t.senderId === userId ? t.receiver : t.sender,
+    }));
+
+    return {
+      data: formattedTransactions,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

@@ -5,7 +5,7 @@ import { transactionsController } from '../../registry';
 const transactionsRoutes = Router();
 
 import { registry } from '../../config/swagger';
-import { createTransactionSchema } from './transactions.dtos';
+import { createTransactionSchema, getTransactionHistoryQuerySchema } from './transactions.dtos';
 
 registry.registerPath({
   method: 'post',
@@ -33,5 +33,27 @@ registry.registerPath({
 });
 
 transactionsRoutes.post('/', authMiddleware, transactionsController.create);
+
+registry.registerPath({
+  method: 'get',
+  path: '/transactions/history',
+  tags: ['Transactions'],
+  summary: 'Get user transaction history',
+  description: 'Returns paginated list of transactions sent or received by the authenticated user.',
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: getTransactionHistoryQuerySchema,
+  },
+  responses: {
+    200: {
+      description: 'Transaction history retrieved successfully',
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+  },
+});
+
+transactionsRoutes.get('/history', authMiddleware, transactionsController.getHistory);
 
 export { transactionsRoutes };

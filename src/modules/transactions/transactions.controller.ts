@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AppError } from '../../errors/AppError';
-import { createTransactionSchema } from './transactions.dtos';
+import { createTransactionSchema, getTransactionHistoryQuerySchema } from './transactions.dtos';
 import { TransactionsService } from './transactions.service';
 
 export class TransactionsController {
@@ -22,5 +22,13 @@ export class TransactionsController {
     });
 
     res.status(201).json(transaction);
+  };
+
+  getHistory = async (req: Request, res: Response) => {
+    const userId = req.userId!;
+    const query = getTransactionHistoryQuerySchema.parse(req.query);
+
+    const history = await this.transactionsService.getHistory(userId, query);
+    res.status(200).json(history);
   };
 }
