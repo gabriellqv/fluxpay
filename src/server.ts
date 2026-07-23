@@ -1,11 +1,9 @@
-import 'dotenv/config';
 import { app } from './app';
+import { env } from './config/env';
 import { prisma } from './config/prisma';
 
-const PORT = process.env.PORT || 3000;
-
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port: ${PORT}`);
+const server = app.listen(env.PORT, () => {
+  console.log(`Server running on port: ${env.PORT}`);
 });
 
 function shutdown() {

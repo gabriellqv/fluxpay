@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { env } from '../../config/env';
 import { AppError } from '../../errors/AppError';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { LoginDTO } from './auth.dtos';
@@ -18,16 +19,9 @@ export class AuthService {
       throw new AppError('E-mail ou senha incorretos.', 401);
     }
 
-    const secret = process.env.JWT_SECRET;
-    const expiresIn = process.env.JWT_EXPIRES_IN || '1d';
-
-    if (!secret) {
-      throw new AppError('Erro interno de configuração de segurança.', 500);
-    }
-
-    const token = jwt.sign({ name: user.name, email: user.email }, secret, {
+    const token = jwt.sign({ name: user.name, email: user.email }, env.JWT_SECRET, {
       subject: user.id,
-      expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
+      expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
 
     const { password: _, ...userWithoutPassword } = user;
