@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { authMiddleware } from '../../middlewares/auth.middleware';
+import { authorizeOwner } from '../../middlewares/authorizeOwner';
 import { usersController } from '../../registry';
 
 export const usersRoutes = Router();
@@ -35,8 +37,7 @@ registry.registerPath({
 });
 
 usersRoutes.post('/', usersController.create);
-usersRoutes.patch('/:id', usersController.update);
-usersRoutes.put('/:id', usersController.replace);
-usersRoutes.delete('/:id', usersController.delete);
-usersRoutes.get('/', usersController.findAll);
-usersRoutes.get('/:id', usersController.findById);
+usersRoutes.get('/:id', authMiddleware, authorizeOwner, usersController.findById);
+usersRoutes.patch('/:id', authMiddleware, authorizeOwner, usersController.update);
+usersRoutes.put('/:id', authMiddleware, authorizeOwner, usersController.replace);
+usersRoutes.delete('/:id', authMiddleware, authorizeOwner, usersController.delete);
