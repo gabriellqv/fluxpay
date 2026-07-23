@@ -11,7 +11,7 @@ export class TransactionsService {
 
   async create({ senderId, receiverId, amount }: CreateTransactionDTO) {
     if (senderId === receiverId) {
-      throw new AppError('Não é possível transferir para você mesmo.', 400);
+      throw new AppError('Não é possível transferir para você mesmo.', 400, 'SAME_USER_TRANSFER');
     }
     const [sender, receiver] = await Promise.all([
       this.usersRepository.findById(senderId),
@@ -19,18 +19,22 @@ export class TransactionsService {
     ]);
 
     if (!sender) {
-      throw new AppError('Remetente não encontrado', 404);
+      throw new AppError('Remetente não encontrado', 404, 'SENDER_NOT_FOUND');
     }
 
     if (!receiver) {
-      throw new AppError('Destinatário não encontrado', 404);
+      throw new AppError('Destinatário não encontrado', 404, 'RECEIVER_NOT_FOUND');
     }
 
     if (Number(sender.balance) < amount) {
-      throw new AppError('Saldo insuficiente', 400);
+      throw new AppError('Saldo insuficiente', 400, 'INSUFFICIENT_FUNDS');
     }
 
-    const transaction = await this.transactionsRepository.create({ senderId, receiverId, amount });
+    const transaction = await this.transactionsRepository.create({
+      senderId,
+      receiverId,
+      amount,
+    });
     return transaction;
   }
 
