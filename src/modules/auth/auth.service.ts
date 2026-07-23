@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { AppError } from '../../errors/AppError';
+import { excludePassword } from '../../utils/excludePassword';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { LoginDTO } from './auth.dtos';
 
@@ -24,7 +25,7 @@ export class AuthService {
       expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
 
-    const { password: _, ...userWithoutPassword } = user;
+    const userWithoutPassword = excludePassword(user);
 
     return {
       token,
