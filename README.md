@@ -171,6 +171,7 @@ npm run test
 | Script | Command | Description |
 | :--- | :--- | :--- |
 | `dev` | `npm run dev` | Starts the server in watch mode with `tsx` |
+| `build` | `npm run build` | Compiles TypeScript source files into dist directory |
 | `test` | `npm run test` | Runs unit tests with Vitest |
 | `typecheck` | `npm run typecheck` | Runs TypeScript type checking (`tsc --noEmit`) |
 | `lint` | `npm run lint` | Runs ESLint on source files |
