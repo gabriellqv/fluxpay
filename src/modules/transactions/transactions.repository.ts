@@ -31,4 +31,28 @@ export class TransactionsRepository implements ITransactionsRepository {
       return transaction;
     });
   }
+
+  async findHistoryByUserId(userId: string, page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const whereCondition = {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+    };
+
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where: whereCondition,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          sender: { select: { id: true, name: true, email: true } },
+          receiver: { select: { id: true, name: true, email: true } },
+        },
+      }),
+      prisma.transaction.count({ where: whereCondition }),
+    ]);
+
+    return { transactions, total };
+  }
 }

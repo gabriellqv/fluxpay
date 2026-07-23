@@ -15,7 +15,14 @@ export const createTransactionSchema = registry.register(
   }),
 );
 
+export const getTransactionHistoryQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+});
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+
+export type GetTransactionHistoryQueryDTO = z.infer<typeof getTransactionHistoryQuerySchema>;
 
 export interface CreateTransactionDTO {
   senderId: string;
