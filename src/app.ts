@@ -5,10 +5,8 @@ import swaggerUi from 'swagger-ui-express';
 import { httpLogger } from './config/logger';
 import { generateOpenApiDocument } from './config/swagger';
 import { errorHandler } from './middlewares/errorHandler';
-import { globalRateLimiter, sensitiveRateLimiter } from './middlewares/rateLimiter';
-import { authRoutes } from './modules/auth/auth.routes';
-import { transactionsRoutes } from './modules/transactions/transactions.routes';
-import { usersRoutes } from './modules/users/users.routes';
+import { globalRateLimiter } from './middlewares/rateLimiter';
+import { v1Router } from './routes/v1.router';
 
 const app = express();
 
@@ -21,9 +19,7 @@ app.use(globalRateLimiter);
 const swaggerDocument = generateOpenApiDocument();
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/auth', sensitiveRateLimiter, authRoutes);
-app.use('/users', usersRoutes);
-app.use('/transactions', sensitiveRateLimiter, transactionsRoutes);
+app.use('/v1', v1Router);
 
 app.get(['/', '/health'], (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Flux Pay API is running' });
