@@ -9,7 +9,7 @@ import { createTransactionSchema, getTransactionHistoryQuerySchema } from './tra
 
 registry.registerPath({
   method: 'post',
-  path: '/transactions',
+  path: '/v1/transactions',
   tags: ['Transactions'],
   summary: 'Create a new transaction',
   description: 'Transfers money from one user to another.',
@@ -36,7 +36,7 @@ transactionsRoutes.post('/', authMiddleware, transactionsController.create);
 
 registry.registerPath({
   method: 'get',
-  path: '/transactions/history',
+  path: '/v1/transactions/history',
   tags: ['Transactions'],
   summary: 'Get user transaction history',
   description: 'Returns paginated list of transactions sent or received by the authenticated user.',

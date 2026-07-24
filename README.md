@@ -27,7 +27,7 @@ A RESTful API for digital wallet management and financial transfers. The system 
 - **Transaction history** -- Paginated endpoint returning transactions classified as `SENT` or `RECEIVED` relative to the authenticated user, with counterparty details.
 - **Environment validation** -- All required environment variables are validated at startup using a Zod schema. The application fails immediately with a descriptive error if any variable is missing or invalid.
 - **Graceful shutdown** -- The server handles `SIGTERM` and `SIGINT` signals by stopping new connections, disconnecting the Prisma client, and exiting cleanly. A 10-second timeout forces shutdown if the process hangs.
-- **Rate limiting** -- Global rate limiter (100 requests per 15-minute window) and a stricter limiter for sensitive routes (15 requests per 15-minute window) applied to `/auth` and `/transactions`.
+- **Rate limiting** -- Global rate limiter (100 requests per 15-minute window) and a stricter limiter for sensitive routes (15 requests per 15-minute window) applied to `/v1/auth` and `/v1/transactions`.
 - **Security headers** -- Helmet middleware applied globally.
 - **API documentation** -- OpenAPI 3.0 specification auto-generated from Zod schemas, served via Swagger UI at `/api-docs`.
 - **Database seeding** -- Seed script that creates two test users with hashed passwords.
@@ -48,12 +48,14 @@ src/
     errorHandler.ts      # Global error handler (AppError, ZodError, Prisma errors)
     rateLimiter.ts       # Rate limiting configuration
   modules/
-    auth/           # Authentication module (login)
-    users/          # User CRUD module
-    transactions/   # Transfer and history module
-  registry.ts       # Controller instantiation via factory pattern
-  app.ts            # Express app setup (middlewares, routes, Swagger)
-  server.ts         # HTTP server startup and graceful shutdown
+    auth/           # Authentication module (login DTO, service, controller, routes)
+    transactions/   # Transactions module (DTOs, repository, service, controller, routes)
+    users/          # Users module (DTOs, repository, service, controller, routes)
+  routes/
+    v1.router.ts    # Aggregated router for API v1
+  app.ts            # Express application setup
+  registry.ts       # Centralized dependency injection container
+  server.ts         # Server entry point with graceful shutdown
 prisma/
   schema.prisma     # Database schema (User, Transaction models)
   seed.ts           # Database seed script
@@ -112,9 +114,11 @@ npx prisma db seed
 npm run dev
 ```
 
-The server runs at `http://localhost:3000` by default. The Swagger documentation is available at `http://localhost:3000/api-docs`.
+The server runs at `http://localhost:3000/v1` by default. The Swagger documentation is available at `http://localhost:3000/api-docs`.
 
 ## Environment Variables
+
+The application uses the following environment variables (defined in `.env`):
 
 | Variable | Required | Default | Description |
 | :--- | :---: | :---: | :--- |
@@ -132,29 +136,28 @@ The server runs at `http://localhost:3000` by default. The Swagger documentation
 | :--- | :--- | :---: | :--- |
 | `GET` | `/` or `/health` | No | Returns API status |
 
-### Authentication (`/auth`)
+### Authentication (`/v1/auth`)
 
 | Method | Route | Auth | Description |
 | :--- | :--- | :---: | :--- |
-| `POST` | `/auth/login` | No | Authenticates a user and returns a JWT |
+| `POST` | `/v1/auth/login` | No | Authenticates a user and returns a JWT |
 
-### Users (`/users`)
-
-| Method | Route | Auth | Description |
-| :--- | :--- | :---: | :--- |
-| `POST` | `/users` | No | Creates a new user |
-| `GET` | `/users` | No | Lists all users |
-| `GET` | `/users/:id` | No | Finds a user by ID |
-| `PATCH` | `/users/:id` | No | Partially updates a user |
-| `PUT` | `/users/:id` | No | Fully replaces a user |
-| `DELETE` | `/users/:id` | No | Deletes a user |
-
-### Transactions (`/transactions`)
+### Users (`/v1/users`)
 
 | Method | Route | Auth | Description |
 | :--- | :--- | :---: | :--- |
-| `POST` | `/transactions` | Bearer | Transfers money between two users |
-| `GET` | `/transactions/history` | Bearer | Returns paginated transaction history |
+| `POST` | `/v1/users` | No | Creates a new user |
+| `GET` | `/v1/users/:id` | Bearer | Finds a user by ID |
+| `PATCH` | `/v1/users/:id` | Bearer | Partially updates a user |
+| `PUT` | `/v1/users/:id` | Bearer | Fully replaces a user |
+| `DELETE` | `/v1/users/:id` | Bearer | Deletes a user |
+
+### Transactions (`/v1/transactions`)
+
+| Method | Route | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/v1/transactions` | Bearer | Transfers money between two users |
+| `GET` | `/v1/transactions/history` | Bearer | Returns paginated transaction history |
 
 ## Testing
 

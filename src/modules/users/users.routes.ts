@@ -10,7 +10,7 @@ import { createUserSchema } from './users.dtos';
 
 registry.registerPath({
   method: 'post',
-  path: '/users',
+  path: '/v1/users',
   tags: ['Users'],
   summary: 'Create a new user',
   description: 'Registers a new user in the system.',
