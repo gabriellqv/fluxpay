@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';

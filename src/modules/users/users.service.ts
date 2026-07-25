@@ -1,4 +1,6 @@
 import bcrypt from 'bcrypt';
+import { cacheService } from '../../cache/cache.service';
+import { cacheKeys } from '../../cache/keys';
 import { AppError } from '../../errors/AppError';
 import { excludePassword } from '../../utils/excludePassword';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
@@ -14,11 +16,22 @@ export class UsersService {
   }
 
   async findById(id: string) {
+    const cacheKey = cacheKeys.userBalance(id);
+    const cachedUser = await cacheService.get<ReturnType<typeof excludePassword>>(cacheKey);
+
+    if (cachedUser) {
+      return cachedUser;
+    }
+
     const user = await this.usersRepository.findById(id);
     if (!user) {
       throw new AppError('Este usuário não foi encontrado.', 404, 'USER_NOT_FOUND');
     }
-    return excludePassword(user);
+
+    const userWithoutPassword = excludePassword(user);
+    await cacheService.set(cacheKey, userWithoutPassword, 60);
+
+    return userWithoutPassword;
   }
 
   async findByCpf(cpf: string) {

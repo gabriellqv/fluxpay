@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import bcrypt from 'bcrypt';
 import { AppError } from '../../errors/AppError';
 import { IUsersRepository } from './users.repository.interface';
@@ -8,6 +9,15 @@ vi.mock('bcrypt', () => ({
   default: {
     hash: vi.fn().mockResolvedValue('hashed_password'),
     compare: vi.fn(),
+  },
+}));
+
+vi.mock('../../cache/cache.service', () => ({
+  cacheService: {
+    get: vi.fn(async () => null),
+    set: vi.fn(async () => undefined),
+    del: vi.fn(async () => undefined),
+    delByPattern: vi.fn(async () => undefined),
   },
 }));
 
@@ -89,6 +99,17 @@ describe('UsersService', () => {
   });
 
   describe('findById', () => {
+    it('should return cached user when available in cache', async () => {
+      const { cacheService } = await import('../../cache/cache.service');
+      const cachedUser = { id: 'cached-id', name: 'Cached User', email: 'cached@email.com' };
+      vi.mocked(cacheService.get).mockResolvedValueOnce(cachedUser);
+
+      const result = await sut.findById('cached-id');
+
+      expect(result).toEqual(cachedUser);
+      expect(mockUsersRepository.findById).not.toHaveBeenCalled();
+    });
+
     it('should throw AppError when user does not exist', async () => {
       vi.mocked(mockUsersRepository.findById).mockResolvedValue(null);
 

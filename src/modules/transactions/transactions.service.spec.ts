@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../errors/AppError';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { ITransactionsRepository } from './transactions.repository.interface';
@@ -15,6 +16,15 @@ vi.mock('../../config/logger', () => ({
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
+  },
+}));
+
+vi.mock('../../cache/cache.service', () => ({
+  cacheService: {
+    get: vi.fn(async () => null),
+    set: vi.fn(async () => undefined),
+    del: vi.fn(async () => undefined),
+    delByPattern: vi.fn(async () => undefined),
   },
 }));
 
@@ -335,6 +345,20 @@ describe('TransactionsService', () => {
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
       expect(result.meta.totalPages).toBe(0);
+    });
+
+    it('should return cached history when available in cache', async () => {
+      const { cacheService } = await import('../../cache/cache.service');
+      const cachedResult = {
+        data: [],
+        meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+      };
+      vi.mocked(cacheService.get).mockResolvedValueOnce(cachedResult);
+
+      const result = await sut.getHistory('user-id', { page: 1, limit: 10 });
+
+      expect(result).toEqual(cachedResult);
+      expect(mockTransactionsRepository.findHistoryByUserId).not.toHaveBeenCalled();
     });
   });
 });
