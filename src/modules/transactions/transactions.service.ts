@@ -1,9 +1,30 @@
+import { Prisma } from '@prisma/client';
+import { cacheService } from '../../cache/cache.service';
+import { cacheKeys } from '../../cache/keys';
 import { logger } from '../../config/logger';
 import { AppError } from '../../errors/AppError';
 import { transferNotificationQueue } from '../../jobs/queues/transfer-notification.queue';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { CreateTransactionDTO, GetTransactionHistoryQueryDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
+
+export interface FormattedTransaction {
+  id: string;
+  amount: Prisma.Decimal;
+  type: string;
+  createdAt: Date;
+  counterparty: { id: string; name: string; email: string };
+}
+
+export interface GetTransactionHistoryResult {
+  data: FormattedTransaction[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 export class TransactionsService {
   constructor(
@@ -38,6 +59,13 @@ export class TransactionsService {
       amount,
     });
 
+    await Promise.all([
+      cacheService.del(cacheKeys.userBalance(senderId)),
+      cacheService.del(cacheKeys.userBalance(receiverId)),
+      cacheService.delByPattern(cacheKeys.userHistoryPattern(senderId)),
+      cacheService.delByPattern(cacheKeys.userHistoryPattern(receiverId)),
+    ]);
+
     if (transferNotificationQueue) {
       try {
         await transferNotificationQueue.add(
@@ -62,8 +90,18 @@ export class TransactionsService {
     return transaction;
   }
 
-  async getHistory(userId: string, query: GetTransactionHistoryQueryDTO) {
+  async getHistory(
+    userId: string,
+    query: GetTransactionHistoryQueryDTO,
+  ): Promise<GetTransactionHistoryResult> {
     const { page, limit } = query;
+    const cacheKey = cacheKeys.userHistory(userId, page, limit);
+
+    const cachedHistory = await cacheService.get<GetTransactionHistoryResult>(cacheKey);
+    if (cachedHistory) {
+      return cachedHistory;
+    }
+
     const { transactions, total } = await this.transactionsRepository.findHistoryByUserId(
       userId,
       page,
@@ -78,7 +116,7 @@ export class TransactionsService {
       counterparty: t.senderId === userId ? t.receiver : t.sender,
     }));
 
-    return {
+    const result = {
       data: formattedTransactions,
       meta: {
         total,
@@ -87,5 +125,9 @@ export class TransactionsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    await cacheService.set(cacheKey, result, 30);
+
+    return result;
   }
 }

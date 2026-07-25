@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../errors/AppError';
 import { INotificationsRepository } from './notifications.repository.interface';
 import { NotificationsService } from './notifications.service';
