@@ -24,7 +24,8 @@ export class NotificationsController {
       throw new AppError('Usuário não autenticado.', 401);
     }
 
-    const notification = await this.notificationsService.markAsRead(id, userId);
+    const notificationId = Array.isArray(id) ? id[0] : id;
+    const notification = await this.notificationsService.markAsRead(notificationId, userId);
     res.status(200).json(notification);
   };
 }
