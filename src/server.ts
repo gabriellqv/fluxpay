@@ -1,15 +1,28 @@
 import { app } from './app';
 import { env } from './config/env';
+import { logger } from './config/logger';
 import { prisma } from './config/prisma';
+import { redisConnection } from './config/redis';
+import { transferNotificationWorker } from './jobs/workers/transfer-notification.worker';
 
 const server = app.listen(env.PORT, () => {
   console.log(`Server running on port: ${env.PORT}`);
 });
 
-function shutdown() {
+async function shutdown() {
   console.log('Shutting down gracefully...');
 
   server.close(async () => {
+    if (transferNotificationWorker) {
+      await transferNotificationWorker.close();
+      logger.info('Transfer notification worker closed');
+    }
+
+    if (redisConnection) {
+      await redisConnection.quit();
+      logger.info('Redis connection closed');
+    }
+
     await prisma.$disconnect();
     console.log('Server closed.');
     process.exit(0);

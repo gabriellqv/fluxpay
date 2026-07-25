@@ -14,8 +14,9 @@ model User {
   password  String
   balance   Decimal  @default(100.00)
   createdAt DateTime @default(now())
-  sentTransactions     Transaction[] @relation("SenderRelation")
-  receivedTransactions Transaction[] @relation("ReceiverRelation")
+  sentTransactions     Transaction[]  @relation("SenderRelation")
+  receivedTransactions Transaction[]  @relation("ReceiverRelation")
+  notifications        Notification[]
   @@map("users")
 }
 
@@ -27,8 +28,25 @@ model Transaction {
   sender    User     @relation("SenderRelation", fields: [senderId], references: [id])
   receiverId String
   receiver   User    @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  notifications Notification[]
 
   @@index([senderId])
   @@index([receiverId])
   @@map("transactions")
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  userId        String
+  transactionId String
+  message       String
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
 }

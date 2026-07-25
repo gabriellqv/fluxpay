@@ -13,7 +13,21 @@ services:
     volumes:
       - fluxpay-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U docker -d fluxpay"]
+      test: ['CMD-SHELL', 'pg_isready -U docker -d fluxpay']
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: fluxpay-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - fluxpay-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 3s
       timeout: 3s
       retries: 5
@@ -32,10 +46,14 @@ services:
       DATABASE_URL: postgresql://docker:docker@database:5432/fluxpay?schema=public
       JWT_SECRET: fluxpay_super_secret_jwt_key_2026_docker
       JWT_EXPIRES_IN: 1d
+      REDIS_URL: redis://redis:6379
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: always
 
 volumes:
   fluxpay-db-data:
+  fluxpay-redis-data:
