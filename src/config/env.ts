@@ -7,6 +7,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url({ message: 'DATABASE_URL deve ser uma URL válida.' }),
   JWT_SECRET: z.string().min(1, { message: 'JWT_SECRET é obrigatório.' }),
   JWT_EXPIRES_IN: z.string().default('1d'),
+  REDIS_URL: z.string().url().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

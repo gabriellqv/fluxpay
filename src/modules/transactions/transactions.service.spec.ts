@@ -4,6 +4,20 @@ import { IUsersRepository } from '../users/users.repository.interface';
 import { ITransactionsRepository } from './transactions.repository.interface';
 import { TransactionsService } from './transactions.service';
 
+vi.mock('../../jobs/queues/transfer-notification.queue', () => ({
+  transferNotificationQueue: {
+    add: vi.fn(),
+  },
+}));
+
+vi.mock('../../config/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 const mockTransactionsRepository: ITransactionsRepository = {
   create: vi.fn(),
   findHistoryByUserId: vi.fn(),
@@ -113,6 +127,80 @@ describe('TransactionsService', () => {
         amount: 50,
       });
     });
+
+    it('should enqueue a notification job after creating a transaction', async () => {
+      const { transferNotificationQueue } =
+        await import('../../jobs/queues/transfer-notification.queue');
+
+      const sender = makeSender();
+      const receiver = makeReceiver();
+
+      vi.mocked(mockUsersRepository.findById)
+        .mockResolvedValueOnce(sender)
+        .mockResolvedValueOnce(receiver);
+
+      const expectedTransaction = {
+        id: 'transaction-id',
+        senderId: sender.id,
+        receiverId: receiver.id,
+        amount: new Prisma.Decimal(50),
+        createdAt: new Date(),
+      };
+
+      vi.mocked(mockTransactionsRepository.create).mockResolvedValue(expectedTransaction);
+
+      await sut.create({
+        senderId: sender.id,
+        receiverId: receiver.id,
+        amount: 50,
+      });
+
+      expect(transferNotificationQueue!.add).toHaveBeenCalledWith(
+        'notify-receiver',
+        {
+          senderId: sender.id,
+          senderName: sender.name,
+          receiverId: receiver.id,
+          receiverName: receiver.name,
+          amount: 50,
+          transactionId: expectedTransaction.id,
+        },
+        {
+          jobId: `notify-receiver:${expectedTransaction.id}`,
+        },
+      );
+    });
+
+    it('should not throw when notification queue fails', async () => {
+      const { transferNotificationQueue } =
+        await import('../../jobs/queues/transfer-notification.queue');
+
+      vi.mocked(transferNotificationQueue!.add).mockRejectedValueOnce(
+        new Error('Redis connection failed'),
+      );
+
+      vi.mocked(mockUsersRepository.findById)
+        .mockResolvedValueOnce(makeSender())
+        .mockResolvedValueOnce(makeReceiver());
+
+      const expectedTransaction = {
+        id: 'transaction-id',
+        senderId: 'sender-id',
+        receiverId: 'receiver-id',
+        amount: new Prisma.Decimal(50),
+        createdAt: new Date(),
+      };
+
+      vi.mocked(mockTransactionsRepository.create).mockResolvedValue(expectedTransaction);
+
+      const result = await sut.create({
+        senderId: 'sender-id',
+        receiverId: 'receiver-id',
+        amount: 50,
+      });
+
+      expect(result).toEqual(expectedTransaction);
+    });
   });
 
   describe('getHistory', () => {
@@ -164,6 +252,89 @@ describe('TransactionsService', () => {
       const result = await sut.getHistory(receiver.id, { page: 1, limit: 10 });
 
       expect(result.data[0].type).toBe('RECEIVED');
+    });
+
+    it('should set counterparty to receiver when user is the sender', async () => {
+      const sender = makeSender();
+      const receiver = makeReceiver();
+
+      vi.mocked(mockTransactionsRepository.findHistoryByUserId).mockResolvedValue({
+        transactions: [
+          {
+            id: 'tx-1',
+            amount: new Prisma.Decimal(30),
+            createdAt: new Date(),
+            senderId: sender.id,
+            receiverId: receiver.id,
+            sender: { id: sender.id, name: sender.name, email: sender.email },
+            receiver: { id: receiver.id, name: receiver.name, email: receiver.email },
+          },
+        ],
+        total: 1,
+      });
+
+      const result = await sut.getHistory(sender.id, { page: 1, limit: 10 });
+
+      expect(result.data[0].counterparty).toEqual({
+        id: receiver.id,
+        name: receiver.name,
+        email: receiver.email,
+      });
+    });
+
+    it('should set counterparty to sender when user is the receiver', async () => {
+      const sender = makeSender();
+      const receiver = makeReceiver();
+
+      vi.mocked(mockTransactionsRepository.findHistoryByUserId).mockResolvedValue({
+        transactions: [
+          {
+            id: 'tx-1',
+            amount: new Prisma.Decimal(30),
+            createdAt: new Date(),
+            senderId: sender.id,
+            receiverId: receiver.id,
+            sender: { id: sender.id, name: sender.name, email: sender.email },
+            receiver: { id: receiver.id, name: receiver.name, email: receiver.email },
+          },
+        ],
+        total: 1,
+      });
+
+      const result = await sut.getHistory(receiver.id, { page: 1, limit: 10 });
+
+      expect(result.data[0].counterparty).toEqual({
+        id: sender.id,
+        name: sender.name,
+        email: sender.email,
+      });
+    });
+
+    it('should calculate totalPages correctly', async () => {
+      vi.mocked(mockTransactionsRepository.findHistoryByUserId).mockResolvedValue({
+        transactions: [],
+        total: 25,
+      });
+
+      const result = await sut.getHistory('any-id', { page: 1, limit: 10 });
+
+      expect(result.meta.totalPages).toBe(3);
+      expect(result.meta.total).toBe(25);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(10);
+    });
+
+    it('should return empty data when no transactions exist', async () => {
+      vi.mocked(mockTransactionsRepository.findHistoryByUserId).mockResolvedValue({
+        transactions: [],
+        total: 0,
+      });
+
+      const result = await sut.getHistory('any-id', { page: 1, limit: 10 });
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+      expect(result.meta.totalPages).toBe(0);
     });
   });
 });

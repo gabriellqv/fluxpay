@@ -1,4 +1,6 @@
+import { logger } from '../../config/logger';
 import { AppError } from '../../errors/AppError';
+import { transferNotificationQueue } from '../../jobs/queues/transfer-notification.queue';
 import { IUsersRepository } from '../users/users.repository.interface';
 import { CreateTransactionDTO, GetTransactionHistoryQueryDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
@@ -35,6 +37,28 @@ export class TransactionsService {
       receiverId,
       amount,
     });
+
+    if (transferNotificationQueue) {
+      try {
+        await transferNotificationQueue.add(
+          'notify-receiver',
+          {
+            senderId,
+            senderName: sender.name,
+            receiverId,
+            receiverName: receiver.name,
+            amount,
+            transactionId: transaction.id,
+          },
+          {
+            jobId: `notify-receiver:${transaction.id}`,
+          },
+        );
+      } catch (err) {
+        logger.error({ err, transactionId: transaction.id }, 'Failed to enqueue notification job');
+      }
+    }
+
     return transaction;
   }
 
