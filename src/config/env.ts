@@ -1,6 +1,11 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+/**
+ * Validates all required environment variables at startup.
+ * Uses Zod to parse and coerce values, failing fast with a descriptive
+ * error if any variable is missing or invalid.
+ */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),

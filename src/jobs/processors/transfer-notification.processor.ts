@@ -3,6 +3,13 @@ import { logger } from '../../config/logger';
 import { prisma } from '../../config/prisma';
 import { TransferNotificationJobData } from '../queues/transfer-notification.queue';
 
+/**
+ * Processes a transfer notification job by creating a Notification record
+ * in the database for the receiver.
+ *
+ * The notification message is formatted in Portuguese because the
+ * application's target audience is Brazilian users.
+ */
 export async function processTransferNotification(
   job: Job<TransferNotificationJobData>,
 ): Promise<void> {

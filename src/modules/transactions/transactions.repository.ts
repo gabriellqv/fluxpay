@@ -4,6 +4,17 @@ import { CreateTransactionDTO } from './transactions.dtos';
 import { ITransactionsRepository } from './transactions.repository.interface';
 
 export class TransactionsRepository implements ITransactionsRepository {
+  /**
+   * Creates a transaction atomically using a Prisma interactive transaction.
+   *
+   * The three operations (decrement sender, increment receiver, create record)
+   * run inside a single database transaction. If any step fails, all changes
+   * are rolled back, ensuring balance consistency.
+   *
+   * The balance update uses Prisma's atomic `decrement`/`increment` operations
+   * rather than reading and writing the balance manually, which would be
+   * vulnerable to race conditions.
+   */
   async create(data: CreateTransactionDTO): Promise<Transaction> {
     return prisma.$transaction(async (tx) => {
       await tx.user.update({

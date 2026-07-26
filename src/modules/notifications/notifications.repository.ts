@@ -10,6 +10,13 @@ export class NotificationsRepository implements INotificationsRepository {
     });
   }
 
+  /**
+   * Marks a notification as read, but only if it belongs to the given user.
+   *
+   * Uses `findFirst` with both `id` and `userId` to prevent users from
+   * marking another user's notifications as read. Returns null if the
+   * notification does not exist or does not belong to the user.
+   */
   async markAsRead(id: string, userId: string): Promise<Notification | null> {
     const notification = await prisma.notification.findFirst({
       where: { id, userId },

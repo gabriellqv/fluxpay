@@ -1,3 +1,4 @@
+# Stage 1: Install production and dev dependencies
 FROM node:22-alpine AS deps
 WORKDIR /app
 
@@ -6,6 +7,7 @@ COPY prisma ./prisma/
 
 RUN npm ci
 
+# Stage 2: Build the TypeScript application
 FROM node:22-alpine AS builder
 WORKDIR /app
 
@@ -16,8 +18,10 @@ COPY src ./src
 COPY prisma ./prisma
 
 RUN npm run build
+# Remove dev dependencies to keep the final image small
 RUN npm prune --production
 
+# Stage 3: Production runtime
 FROM node:22-alpine AS runner
 WORKDIR /app
 

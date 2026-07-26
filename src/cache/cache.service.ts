@@ -1,6 +1,14 @@
 import { logger } from '../config/logger';
 import { redisConnection } from '../config/redis';
 
+/**
+ * Simple cache-aside service wrapping Redis operations.
+ *
+ * All methods gracefully degrade when Redis is unavailable (returns null/void)
+ * so the application remains functional without a cache.
+ *
+ * Values are serialized as JSON strings for storage and parsed back on retrieval.
+ */
 export class CacheService {
   async get<T>(key: string): Promise<T | null> {
     if (!redisConnection) return null;
@@ -36,6 +44,13 @@ export class CacheService {
     }
   }
 
+  /**
+   * Deletes all keys matching a glob pattern.
+   *
+   * Uses `KEYS` (not `SCAN`) because the expected key volume is low.
+   * For high-cardinality patterns, this should be replaced with `SCAN`
+   * to avoid blocking the Redis event loop.
+   */
   async delByPattern(pattern: string): Promise<void> {
     if (!redisConnection) return;
 

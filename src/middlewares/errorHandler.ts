@@ -4,6 +4,21 @@ import { ZodError } from 'zod';
 import { logger } from '../config/logger';
 import { AppError } from '../errors/AppError';
 
+/**
+ * Global Express error handler.
+ *
+ * Catches all errors thrown in route handlers and middleware, and returns
+ * a structured JSON response with a consistent shape:
+ *   { status, code, message, timestamp, errors? }
+ *
+ * Handles three known error types:
+ * - AppError: application-level errors with explicit status codes and error codes.
+ * - ZodError: validation errors from request body/query parsing.
+ * - Prisma P2003: foreign key violations (e.g. deleting a user with transactions).
+ *
+ * Unknown errors are logged at error level and return a generic 500 response
+ * to avoid leaking internal details.
+ */
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   const timestamp = new Date().toISOString();
 
@@ -31,6 +46,9 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   }
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    // P2003 is raised when a foreign key constraint is violated.
+    // The most common case is attempting to delete a user that has
+    // associated transactions (ON DELETE RESTRICT on senderId/receiverId).
     if (err.code === 'P2003') {
       logger.warn(
         { err, url: req.url, method: req.method },

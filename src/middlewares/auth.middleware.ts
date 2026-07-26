@@ -9,6 +9,15 @@ interface TokenPayload {
   exp: number;
 }
 
+/**
+ * JWT authentication middleware.
+ *
+ * Extracts the Bearer token from the Authorization header, verifies it,
+ * and attaches the authenticated user's ID to `req.userId` via the `sub` claim.
+ *
+ * Throws a 401 AppError for missing, malformed, or invalid/expired tokens.
+ * The error handler middleware catches these and returns a structured response.
+ */
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 

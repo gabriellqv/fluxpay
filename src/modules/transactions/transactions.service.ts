@@ -32,6 +32,22 @@ export class TransactionsService {
     private usersRepository: IUsersRepository,
   ) {}
 
+  /**
+   * Creates a money transfer between two users.
+   *
+   * Validation order matters: self-transfer is checked first (cheapest),
+   * then sender/receiver existence (parallel lookup), then balance.
+   *
+   * The actual balance update and transaction creation happen inside a
+   * single Prisma interactive transaction to guarantee atomicity.
+   *
+   * After the transfer succeeds:
+   * - Both users' balance caches are invalidated.
+   * - Both users' transaction history caches are invalidated (pattern-based).
+   * - A BullMQ job is enqueued to create a notification for the receiver.
+   *   If the queue is unavailable or the enqueue fails, the transfer still
+   *   succeeds — notifications are best-effort, not critical path.
+   */
   async create({ senderId, receiverId, amount }: CreateTransactionDTO) {
     if (senderId === receiverId) {
       throw new AppError('Não é possível transferir para você mesmo.', 400, 'SAME_USER_TRANSFER');
@@ -79,6 +95,9 @@ export class TransactionsService {
             transactionId: transaction.id,
           },
           {
+            // Using the transaction ID in the job ID ensures idempotency:
+            // if the same transfer is somehow enqueued twice, BullMQ
+            // deduplicates by job ID.
             jobId: `notify-receiver:${transaction.id}`,
           },
         );
@@ -90,6 +109,16 @@ export class TransactionsService {
     return transaction;
   }
 
+  /**
+   * Returns paginated transaction history for a user.
+   *
+   * Each transaction is classified as SENT or RECEIVED relative to the
+   * requesting user, and the counterparty (the other party) is resolved
+   * accordingly.
+   *
+   * Results are cached with a 30-second TTL. The cache is invalidated
+   * by pattern whenever a new transaction is created for the user.
+   */
   async getHistory(
     userId: string,
     query: GetTransactionHistoryQueryDTO,
