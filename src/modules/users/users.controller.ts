@@ -1,9 +1,21 @@
 import { Request, Response } from 'express';
+import { AppError } from '../../errors/AppError';
 import { createUserSchema, replaceUserSchema, updateUserSchema } from './users.dtos';
 import { UsersService } from './users.service';
 
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  getMe = async (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    if (!userId) {
+      throw new AppError('Usuário não autenticado.', 401);
+    }
+
+    const user = await this.usersService.findById(userId);
+    res.status(200).json(user);
+  };
 
   create = async (req: Request, res: Response) => {
     const data = createUserSchema.parse(req.body);

@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, { message: 'JWT_SECRET é obrigatório.' }),
   JWT_EXPIRES_IN: z.string().default('1d'),
   REDIS_URL: z.string().url().optional(),
+  CORS_ORIGIN: z.string().default('*'),
 });
 
 const _env = envSchema.safeParse(process.env);
