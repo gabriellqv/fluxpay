@@ -1,11 +1,11 @@
 import { Router } from 'express';
+import { registry } from '../../config/swagger';
 import { authMiddleware } from '../../middlewares/auth.middleware';
-import { transactionsController } from '../../registry';
+import { createTransactionSchema, getTransactionHistoryQuerySchema } from './transactions.dtos';
+import { makeTransactionsController } from './transactions.factory';
 
 const transactionsRoutes = Router();
-
-import { registry } from '../../config/swagger';
-import { createTransactionSchema, getTransactionHistoryQuerySchema } from './transactions.dtos';
+const transactionsController = makeTransactionsController();
 
 registry.registerPath({
   method: 'post',
@@ -13,6 +13,7 @@ registry.registerPath({
   tags: ['Transactions'],
   summary: 'Create a new transaction',
   description: 'Transfers money from one user to another.',
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -28,6 +29,9 @@ registry.registerPath({
     },
     400: {
       description: 'Validation error or business rule violation',
+    },
+    401: {
+      description: 'Unauthorized',
     },
   },
 });
