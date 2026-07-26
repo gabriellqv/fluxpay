@@ -15,6 +15,14 @@ export class UsersService {
     return users.map((user) => excludePassword(user));
   }
 
+  /**
+   * Finds a user by ID with cache-aside pattern.
+   *
+   * The cache key is based on the user balance key because the primary
+   * use case for caching user data is balance checks during transfers.
+   * Cache TTL is 60 seconds — short enough to reflect balance changes
+   * from recent transactions without excessive database queries.
+   */
   async findById(id: string) {
     const cacheKey = cacheKeys.userBalance(id);
     const cachedUser = await cacheService.get<ReturnType<typeof excludePassword>>(cacheKey);
@@ -50,6 +58,12 @@ export class UsersService {
     return excludePassword(user);
   }
 
+  /**
+   * Creates a new user after checking for duplicate email and CPF.
+   *
+   * The password is hashed with bcrypt (cost factor 10) before storage.
+   * The default balance of 100.00 is set at the database level (schema default).
+   */
   async create(data: CreateUserDTO) {
     const userExists = await this.usersRepository.findByEmail(data.email);
 

@@ -5,11 +5,14 @@ import {
 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 
-// Extend Zod with OpenAPI properties
+// Extends Zod with OpenAPI metadata support so that schemas registered
+// with the registry can carry .openapi() annotations (examples, descriptions).
 extendZodWithOpenApi(z);
 
 export const registry = new OpenAPIRegistry();
 
+// BearerAuth is registered globally so that individual route definitions
+// can reference it via `security: [{ bearerAuth: [] }]`.
 registry.registerComponent('securitySchemes', 'bearerAuth', {
   type: 'http',
   scheme: 'bearer',

@@ -9,6 +9,14 @@ const server = app.listen(env.PORT, () => {
   console.log(`Server running on port: ${env.PORT}`);
 });
 
+/**
+ * Graceful shutdown handler.
+ *
+ * Closes resources in order: HTTP server, BullMQ worker, Redis, Prisma.
+ * A 10-second timeout forces process exit if graceful shutdown hangs,
+ * preventing the process from staying alive indefinitely in container
+ * orchestration environments (Docker, Kubernetes).
+ */
 async function shutdown() {
   console.log('Shutting down gracefully...');
 

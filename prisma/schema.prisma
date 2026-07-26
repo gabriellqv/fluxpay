@@ -17,6 +17,9 @@ model User {
   sentTransactions     Transaction[]  @relation("SenderRelation")
   receivedTransactions Transaction[]  @relation("ReceiverRelation")
   notifications        Notification[]
+
+  // ON DELETE RESTRICT is the default for required relations,
+  // preventing deletion of users with existing transactions.
   @@map("users")
 }
 
@@ -30,6 +33,8 @@ model Transaction {
   receiver   User    @relation("ReceiverRelation", fields: [receiverId], references: [id])
   notifications Notification[]
 
+  // Indexes on both foreign key columns to optimize history queries
+  // that filter by senderId or receiverId.
   @@index([senderId])
   @@index([receiverId])
   @@map("transactions")
@@ -46,6 +51,8 @@ model Notification {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
+  // Index on userId for listing a user's notifications.
+  // Index on read for potential filtering of unread notifications.
   @@index([userId])
   @@index([read])
   @@map("notifications")

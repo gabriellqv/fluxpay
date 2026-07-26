@@ -1,3 +1,13 @@
+/**
+ * Centralized cache key generators.
+ *
+ * Using a key factory instead of raw strings ensures consistency across
+ * the codebase and makes it easy to change the key format later.
+ *
+ * The `userHistoryPattern` key is used for pattern-based invalidation
+ * after a new transaction is created, clearing all cached history pages
+ * for a given user regardless of page/limit parameters.
+ */
 export const cacheKeys = {
   userBalance: (userId: string) => `user:${userId}:balance`,
   userHistory: (userId: string, page: number, limit: number) =>

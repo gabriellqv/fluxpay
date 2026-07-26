@@ -1,6 +1,15 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../src/config/prisma';
 
+/**
+ * Seeds the database with two test users for development and testing.
+ *
+ * Uses `upsert` so the seed is idempotent — running it multiple times
+ * will not create duplicate users or fail on unique constraint violations.
+ *
+ * Silvio Santos starts with a large balance (5,000,000) to serve as a
+ * funding source for transfer tests.
+ */
 async function main() {
   console.log('Seeding database...');
 
