@@ -9,10 +9,33 @@ import { IUsersRepository } from './users.repository.interface';
 export class UsersService {
   constructor(private usersRepository: IUsersRepository) {}
 
-  async findAll() {
-    const users = await this.usersRepository.findAll();
+  async update(id: string, data: UpdateUserDTO) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
+    }
 
-    return users.map((user) => excludePassword(user));
+    const updateData = data.password
+      ? { ...data, password: await bcrypt.hash(data.password, 10) }
+      : data;
+
+    const updatedUser = await this.usersRepository.update(id, updateData);
+    return excludePassword(updatedUser);
+  }
+
+  async replace(id: string, data: ReplaceUserDTO) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
+    }
+
+    const replaceData = {
+      ...data,
+      password: await bcrypt.hash(data.password, 10),
+    };
+
+    const replacedUser = await this.usersRepository.replace(id, replaceData);
+    return excludePassword(replacedUser);
   }
 
   /**
@@ -88,32 +111,6 @@ export class UsersService {
     });
 
     return excludePassword(newUser);
-  }
-
-  async update(id: string, data: UpdateUserDTO) {
-    const user = await this.usersRepository.findById(id);
-    if (!user) {
-      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
-    }
-
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
-    }
-
-    const updatedUser = await this.usersRepository.update(id, data);
-    return excludePassword(updatedUser);
-  }
-
-  async replace(id: string, data: ReplaceUserDTO) {
-    const user = await this.usersRepository.findById(id);
-    if (!user) {
-      throw new AppError('Usuário não encontrado.', 404, 'USER_NOT_FOUND');
-    }
-
-    data.password = await bcrypt.hash(data.password, 10);
-
-    const replacedUser = await this.usersRepository.replace(id, data);
-    return excludePassword(replacedUser);
   }
 
   async delete(id: string) {
