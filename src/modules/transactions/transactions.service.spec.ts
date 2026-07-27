@@ -34,7 +34,6 @@ const mockTransactionsRepository: ITransactionsRepository = {
 };
 
 const mockUsersRepository: IUsersRepository = {
-  findAll: vi.fn(),
   findById: vi.fn(),
   findByCpf: vi.fn(),
   findByEmail: vi.fn(),

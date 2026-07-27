@@ -40,11 +40,6 @@ export class UsersController {
     res.status(204).send();
   };
 
-  findAll = async (req: Request, res: Response) => {
-    const users = await this.usersService.findAll();
-    res.status(200).json(users);
-  };
-
   findById = async (req: Request, res: Response) => {
     const user = await this.usersService.findById(String(req.params.id));
     res.status(200).json(user);
