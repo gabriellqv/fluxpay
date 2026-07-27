@@ -2,7 +2,6 @@ import { User } from '@prisma/client';
 import { CreateUserDTO, ReplaceUserDTO, UpdateUserDTO } from './users.dtos';
 
 export interface IUsersRepository {
-  findAll(): Promise<User[]>;
   findById(id: string): Promise<User | null>;
   findByCpf(cpf: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;

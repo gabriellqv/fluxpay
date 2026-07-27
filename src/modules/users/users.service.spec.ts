@@ -22,7 +22,6 @@ vi.mock('../../cache/cache.service', () => ({
 }));
 
 const mockUsersRepository: IUsersRepository = {
-  findAll: vi.fn(),
   findById: vi.fn(),
   findByCpf: vi.fn(),
   findByEmail: vi.fn(),
