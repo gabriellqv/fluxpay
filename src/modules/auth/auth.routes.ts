@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { registry } from '../../config/swagger';
-import { loginSchema } from './auth.dtos';
+import { loginResponseSchema, loginSchema } from './auth.dtos';
 import { makeAuthController } from './auth.factory';
 
 const authRoutes = Router();
@@ -24,6 +24,7 @@ registry.registerPath({
   responses: {
     200: {
       description: 'Authenticated successfully',
+      content: { 'application/json': { schema: loginResponseSchema } },
     },
     400: {
       description: 'Validation error',

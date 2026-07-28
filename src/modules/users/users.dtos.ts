@@ -28,3 +28,15 @@ export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
 
 export const replaceUserSchema = createUserSchema;
 export type ReplaceUserDTO = z.infer<typeof replaceUserSchema>;
+
+export const userResponseSchema = registry.register(
+  'UserResponse',
+  z.object({
+    id: z.string().uuid().openapi({ example: '123e4567-e89b-12d3-a456-426614174000' }),
+    name: z.string().openapi({ example: 'John Doe' }),
+    email: z.string().email().openapi({ example: 'john@example.com' }),
+    cpf: z.string().openapi({ example: '12345678901' }),
+    balance: z.number().openapi({ example: 100.0 }),
+    createdAt: z.string().or(z.date()).openapi({ example: '2026-07-28T14:00:00.000Z' }),
+  }),
+);
