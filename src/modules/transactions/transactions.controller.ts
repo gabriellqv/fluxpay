@@ -31,4 +31,12 @@ export class TransactionsController {
     const history = await this.transactionsService.getHistory(userId, query);
     res.status(200).json(history);
   };
+
+  findById = async (req: Request, res: Response) => {
+    const userId = req.userId!;
+    const { id } = req.params as { id: string };
+
+    const transaction = await this.transactionsService.findById(id, userId);
+    res.status(200).json(transaction);
+  };
 }

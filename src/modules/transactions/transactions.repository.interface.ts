@@ -8,9 +8,11 @@ export interface TransactionWithUsers extends Transaction {
 
 export interface ITransactionsRepository {
   create(data: CreateTransactionDTO): Promise<Transaction>;
+  findById(id: string): Promise<TransactionWithUsers | null>;
   findHistoryByUserId(
     userId: string,
     page: number,
     limit: number,
+    type?: 'SENT' | 'RECEIVED',
   ): Promise<{ transactions: TransactionWithUsers[]; total: number }>;
 }

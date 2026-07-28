@@ -20,6 +20,19 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: 'get',
+  path: '/v1/notifications/unread-count',
+  tags: ['Notifications'],
+  summary: 'Get unread notification count',
+  description: 'Returns the total count of unread notifications for the authenticated user.',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: { description: 'Unread count retrieved successfully' },
+    401: { description: 'Unauthorized' },
+  },
+});
+
+registry.registerPath({
   method: 'patch',
   path: '/v1/notifications/{id}/read',
   tags: ['Notifications'],
@@ -34,6 +47,7 @@ registry.registerPath({
 });
 
 notificationsRoutes.get('/', authMiddleware, notificationsController.findByUser);
+notificationsRoutes.get('/unread-count', authMiddleware, notificationsController.countUnread);
 notificationsRoutes.patch('/:id/read', authMiddleware, notificationsController.markAsRead);
 
 export { notificationsRoutes };

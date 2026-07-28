@@ -18,6 +18,7 @@ export const createTransactionSchema = registry.register(
 export const getTransactionHistoryQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
+  type: z.enum(['SENT', 'RECEIVED']).optional(),
 });
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;

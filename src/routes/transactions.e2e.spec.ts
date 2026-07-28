@@ -13,6 +13,7 @@ vi.mock('../config/prisma', () => ({
     },
     transaction: {
       create: vi.fn(),
+      findUnique: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
     },
@@ -150,6 +151,30 @@ describe('Transactions E2E', () => {
       expect(response.body).toHaveProperty('meta');
       expect(response.body.meta.total).toBe(1);
       expect(response.body.data[0]).toHaveProperty('type', 'SENT');
+    });
+  });
+
+  describe('GET /v1/transactions/:id', () => {
+    it('should return transaction details for authorized sender', async () => {
+      const mockTx = {
+        id: 'tx-uuid-123',
+        senderId,
+        receiverId,
+        amount: new Prisma.Decimal(50),
+        createdAt: new Date(),
+        sender: { id: senderId, name: 'Sender', email: 'sender@example.com' },
+        receiver: { id: receiverId, name: 'Receiver', email: 'receiver@example.com' },
+      };
+
+      vi.mocked(prisma.transaction.findUnique).mockResolvedValue(mockTx as never);
+
+      const response = await request(app)
+        .get('/v1/transactions/tx-uuid-123')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id', 'tx-uuid-123');
+      expect(response.body).toHaveProperty('type', 'SENT');
     });
   });
 });
