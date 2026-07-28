@@ -54,19 +54,6 @@ services:
         condition: service_healthy
     restart: always
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: fluxpay-web
-    ports:
-      - '5173:5173'
-    environment:
-      VITE_API_URL: http://localhost:3000
-    depends_on:
-      - backend
-    restart: always
-
 volumes:
   fluxpay-db-data:
   fluxpay-redis-data:

@@ -1,0 +1,10 @@
+{
+  "backend/**/*.ts": [
+    "cd backend && npx eslint --fix",
+    "cd backend && npx prettier --write"
+  ],
+  "frontend/src/**/*.{ts,tsx,css}": [
+    "cd frontend && npx eslint --fix",
+    "cd frontend && npx prettier --write"
+  ]
+}

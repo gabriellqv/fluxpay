@@ -30,10 +30,9 @@ function useStoredToken() {
   return useSyncExternalStore(subscribe, getTokenFromStorage, () => null);
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+function useAuthUser(token: string | null) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const token = useStoredToken();
 
   useEffect(() => {
     if (!token) {
@@ -67,6 +66,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [token]);
+
+  return { user, isLoading, setUser };
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const token = useStoredToken();
+  const { user, isLoading, setUser } = useAuthUser(token);
 
   const login = (newToken: string, userData: User) => {
     localStorage.setItem('fluxpay:token', newToken);
