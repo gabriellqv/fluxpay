@@ -10,7 +10,7 @@
  */
 export const cacheKeys = {
   userProfile: (userId: string) => `user:${userId}:profile`,
-  userHistory: (userId: string, page: number, limit: number) =>
-    `user:${userId}:history:page:${page}:limit:${limit}`,
+  userHistory: (userId: string, page: number, limit: number, type?: string) =>
+    `user:${userId}:history:page:${page}:limit:${limit}${type ? `:type:${type}` : ''}`,
   userHistoryPattern: (userId: string) => `user:${userId}:history:*`,
 };

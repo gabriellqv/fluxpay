@@ -110,6 +110,35 @@ export class TransactionsService {
   }
 
   /**
+   * Finds a specific transaction by ID for an authorized user.
+   *
+   * Only the sender or receiver of the transaction can view its details.
+   */
+  async findById(id: string, userId: string): Promise<FormattedTransaction> {
+    const transaction = await this.transactionsRepository.findById(id);
+
+    if (!transaction) {
+      throw new AppError('Transação não encontrada', 404, 'TRANSACTION_NOT_FOUND');
+    }
+
+    if (transaction.senderId !== userId && transaction.receiverId !== userId) {
+      throw new AppError(
+        'Você não tem permissão para visualizar esta transação.',
+        403,
+        'FORBIDDEN',
+      );
+    }
+
+    return {
+      id: transaction.id,
+      amount: transaction.amount,
+      type: transaction.senderId === userId ? 'SENT' : 'RECEIVED',
+      createdAt: transaction.createdAt,
+      counterparty: transaction.senderId === userId ? transaction.receiver : transaction.sender,
+    };
+  }
+
+  /**
    * Returns paginated transaction history for a user.
    *
    * Each transaction is classified as SENT or RECEIVED relative to the
@@ -123,8 +152,8 @@ export class TransactionsService {
     userId: string,
     query: GetTransactionHistoryQueryDTO,
   ): Promise<GetTransactionHistoryResult> {
-    const { page, limit } = query;
-    const cacheKey = cacheKeys.userHistory(userId, page, limit);
+    const { page, limit, type } = query;
+    const cacheKey = cacheKeys.userHistory(userId, page, limit, type);
 
     const cachedHistory = await cacheService.get<GetTransactionHistoryResult>(cacheKey);
     if (cachedHistory) {
@@ -135,6 +164,7 @@ export class TransactionsService {
       userId,
       page,
       limit,
+      type,
     );
 
     const formattedTransactions = transactions.map((t) => ({

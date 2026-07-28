@@ -30,6 +30,7 @@ vi.mock('../../cache/cache.service', () => ({
 
 const mockTransactionsRepository: ITransactionsRepository = {
   create: vi.fn(),
+  findById: vi.fn(),
   findHistoryByUserId: vi.fn(),
 };
 
@@ -358,6 +359,73 @@ describe('TransactionsService', () => {
 
       expect(result).toEqual(cachedResult);
       expect(mockTransactionsRepository.findHistoryByUserId).not.toHaveBeenCalled();
+    });
+
+    it('should pass type filter to repository when provided', async () => {
+      vi.mocked(mockTransactionsRepository.findHistoryByUserId).mockResolvedValue({
+        transactions: [],
+        total: 0,
+      });
+
+      await sut.getHistory('user-id', { page: 1, limit: 10, type: 'SENT' });
+
+      expect(mockTransactionsRepository.findHistoryByUserId).toHaveBeenCalledWith(
+        'user-id',
+        1,
+        10,
+        'SENT',
+      );
+    });
+  });
+
+  describe('findById', () => {
+    it('should return transaction details when user is the sender', async () => {
+      const sender = makeSender();
+      const receiver = makeReceiver();
+
+      const mockTx = {
+        id: 'tx-123',
+        amount: new Prisma.Decimal(50),
+        createdAt: new Date(),
+        senderId: sender.id,
+        receiverId: receiver.id,
+        sender: { id: sender.id, name: sender.name, email: sender.email },
+        receiver: { id: receiver.id, name: receiver.name, email: receiver.email },
+      };
+
+      vi.mocked(mockTransactionsRepository.findById).mockResolvedValue(mockTx);
+
+      const result = await sut.findById('tx-123', sender.id);
+
+      expect(result.id).toBe('tx-123');
+      expect(result.type).toBe('SENT');
+      expect(result.counterparty).toEqual({
+        id: receiver.id,
+        name: receiver.name,
+        email: receiver.email,
+      });
+    });
+
+    it('should throw 404 AppError when transaction does not exist', async () => {
+      vi.mocked(mockTransactionsRepository.findById).mockResolvedValue(null);
+
+      await expect(sut.findById('invalid-tx', 'user-1')).rejects.toThrow(AppError);
+    });
+
+    it('should throw 403 AppError when user is neither sender nor receiver', async () => {
+      const mockTx = {
+        id: 'tx-123',
+        amount: new Prisma.Decimal(50),
+        createdAt: new Date(),
+        senderId: 'sender-id',
+        receiverId: 'receiver-id',
+        sender: { id: 'sender-id', name: 'Sender', email: 'sender@email.com' },
+        receiver: { id: 'receiver-id', name: 'Receiver', email: 'receiver@email.com' },
+      };
+
+      vi.mocked(mockTransactionsRepository.findById).mockResolvedValue(mockTx);
+
+      await expect(sut.findById('tx-123', 'unrelated-user-id')).rejects.toThrow(AppError);
     });
   });
 });

@@ -43,12 +43,34 @@ export class TransactionsRepository implements ITransactionsRepository {
     });
   }
 
-  async findHistoryByUserId(userId: string, page: number, limit: number) {
+  async findById(id: string) {
+    return prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        sender: { select: { id: true, name: true, email: true } },
+        receiver: { select: { id: true, name: true, email: true } },
+      },
+    });
+  }
+
+  async findHistoryByUserId(
+    userId: string,
+    page: number,
+    limit: number,
+    type?: 'SENT' | 'RECEIVED',
+  ) {
     const skip = (page - 1) * limit;
 
-    const whereCondition = {
-      OR: [{ senderId: userId }, { receiverId: userId }],
-    };
+    let whereCondition;
+    if (type === 'SENT') {
+      whereCondition = { senderId: userId };
+    } else if (type === 'RECEIVED') {
+      whereCondition = { receiverId: userId };
+    } else {
+      whereCondition = {
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      };
+    }
 
     const [transactions, total] = await Promise.all([
       prisma.transaction.findMany({

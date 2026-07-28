@@ -27,4 +27,15 @@ export class NotificationsController {
     const notification = await this.notificationsService.markAsRead(id, userId);
     res.status(200).json(notification);
   };
+
+  countUnread = async (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    if (!userId) {
+      throw new AppError('Usuário não autenticado.', 401);
+    }
+
+    const count = await this.notificationsService.countUnread(userId);
+    res.status(200).json({ count });
+  };
 }

@@ -17,4 +17,8 @@ export class NotificationsService {
 
     return notification;
   }
+
+  async countUnread(userId: string) {
+    return this.notificationsRepository.countUnreadByUserId(userId);
+  }
 }

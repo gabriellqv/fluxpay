@@ -31,4 +31,10 @@ export class NotificationsRepository implements INotificationsRepository {
       data: { read: true },
     });
   }
+
+  async countUnreadByUserId(userId: string): Promise<number> {
+    return prisma.notification.count({
+      where: { userId, read: false },
+    });
+  }
 }

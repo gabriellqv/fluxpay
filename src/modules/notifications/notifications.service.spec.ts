@@ -6,6 +6,7 @@ import { NotificationsService } from './notifications.service';
 const mockNotificationsRepository: INotificationsRepository = {
   findByUserId: vi.fn(),
   markAsRead: vi.fn(),
+  countUnreadByUserId: vi.fn(),
 };
 
 describe('NotificationsService', () => {
@@ -61,6 +62,17 @@ describe('NotificationsService', () => {
       vi.mocked(mockNotificationsRepository.markAsRead).mockResolvedValue(null);
 
       await expect(sut.markAsRead('invalid-id', 'user-1')).rejects.toThrow(AppError);
+    });
+  });
+
+  describe('countUnread', () => {
+    it('should return unread count for user', async () => {
+      vi.mocked(mockNotificationsRepository.countUnreadByUserId).mockResolvedValue(3);
+
+      const count = await sut.countUnread('user-1');
+
+      expect(count).toBe(3);
+      expect(mockNotificationsRepository.countUnreadByUserId).toHaveBeenCalledWith('user-1');
     });
   });
 });

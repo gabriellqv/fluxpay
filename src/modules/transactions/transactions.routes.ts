@@ -60,4 +60,22 @@ registry.registerPath({
 
 transactionsRoutes.get('/history', authMiddleware, transactionsController.getHistory);
 
+registry.registerPath({
+  method: 'get',
+  path: '/v1/transactions/{id}',
+  tags: ['Transactions'],
+  summary: 'Get transaction by ID',
+  description:
+    'Returns details of a specific transaction. User must be either the sender or receiver.',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: { description: 'Transaction details retrieved successfully' },
+    401: { description: 'Unauthorized' },
+    403: { description: 'Forbidden' },
+    404: { description: 'Transaction not found' },
+  },
+});
+
+transactionsRoutes.get('/:id', authMiddleware, transactionsController.findById);
+
 export { transactionsRoutes };
