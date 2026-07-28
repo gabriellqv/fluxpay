@@ -65,7 +65,7 @@ export class TransactionsService {
       throw new AppError('Destinatário não encontrado', 404, 'RECEIVER_NOT_FOUND');
     }
 
-    if (Number(sender.balance) < amount) {
+    if (sender.balance.lessThan(amount)) {
       throw new AppError('Saldo insuficiente', 400, 'INSUFFICIENT_FUNDS');
     }
 
@@ -76,8 +76,8 @@ export class TransactionsService {
     });
 
     await Promise.all([
-      cacheService.del(cacheKeys.userBalance(senderId)),
-      cacheService.del(cacheKeys.userBalance(receiverId)),
+      cacheService.del(cacheKeys.userProfile(senderId)),
+      cacheService.del(cacheKeys.userProfile(receiverId)),
       cacheService.delByPattern(cacheKeys.userHistoryPattern(senderId)),
       cacheService.delByPattern(cacheKeys.userHistoryPattern(receiverId)),
     ]);

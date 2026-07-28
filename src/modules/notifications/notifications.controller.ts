@@ -18,14 +18,13 @@ export class NotificationsController {
 
   markAsRead = async (req: Request, res: Response) => {
     const userId = req.userId;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     if (!userId) {
       throw new AppError('Usuário não autenticado.', 401);
     }
 
-    const notificationId = Array.isArray(id) ? id[0] : id;
-    const notification = await this.notificationsService.markAsRead(notificationId, userId);
+    const notification = await this.notificationsService.markAsRead(id, userId);
     res.status(200).json(notification);
   };
 }

@@ -9,7 +9,7 @@
  * for a given user regardless of page/limit parameters.
  */
 export const cacheKeys = {
-  userBalance: (userId: string) => `user:${userId}:balance`,
+  userProfile: (userId: string) => `user:${userId}:profile`,
   userHistory: (userId: string, page: number, limit: number) =>
     `user:${userId}:history:page:${page}:limit:${limit}`,
   userHistoryPattern: (userId: string) => `user:${userId}:history:*`,
