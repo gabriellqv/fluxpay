@@ -6,7 +6,7 @@ vi.mock('../config/redis', () => ({
     get: vi.fn(),
     set: vi.fn(),
     del: vi.fn(),
-    keys: vi.fn(),
+    scan: vi.fn(),
   },
 }));
 
@@ -61,13 +61,19 @@ describe('CacheService', () => {
     expect(redisConnection!.del).toHaveBeenCalledWith('test-key');
   });
 
-  it('should delete keys by pattern', async () => {
+  it('should delete keys by pattern using scan', async () => {
     const { redisConnection } = await import('../config/redis');
-    vi.mocked(redisConnection!.keys).mockResolvedValue(['key1', 'key2']);
+    vi.mocked(redisConnection!.scan).mockResolvedValue(['0', ['key1', 'key2']] as never);
 
     await cacheService.delByPattern('user:1:history:*');
 
-    expect(redisConnection!.keys).toHaveBeenCalledWith('user:1:history:*');
+    expect(redisConnection!.scan).toHaveBeenCalledWith(
+      '0',
+      'MATCH',
+      'user:1:history:*',
+      'COUNT',
+      100,
+    );
     expect(redisConnection!.del).toHaveBeenCalledWith('key1', 'key2');
   });
 });

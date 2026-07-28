@@ -7,10 +7,9 @@ describe('App E2E', () => {
     const response = await request(app).get('/health');
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      status: 'ok',
-      message: 'Flux Pay API is running',
-    });
+    expect(response.body).toHaveProperty('status', 'ok');
+    expect(response.body).toHaveProperty('message', 'Flux Pay API is running');
+    expect(response.body).toHaveProperty('services');
   });
 
   it('GET /v1/users/me should return 401 Unauthorized without token', async () => {
