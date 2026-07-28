@@ -45,20 +45,26 @@ export class CacheService {
   }
 
   /**
-   * Deletes all keys matching a glob pattern.
-   *
-   * Uses `KEYS` (not `SCAN`) because the expected key volume is low.
-   * For high-cardinality patterns, this should be replaced with `SCAN`
-   * to avoid blocking the Redis event loop.
+   * Deletes all keys matching a glob pattern using SCAN for non-blocking iteration.
    */
   async delByPattern(pattern: string): Promise<void> {
     if (!redisConnection) return;
 
     try {
-      const keys = await redisConnection.keys(pattern);
-      if (keys.length > 0) {
-        await redisConnection.del(...keys);
-      }
+      let cursor = '0';
+      do {
+        const [nextCursor, keys] = await redisConnection.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await redisConnection.del(...keys);
+        }
+      } while (cursor !== '0');
     } catch (err) {
       logger.error({ err, pattern }, 'Cache DEL pattern error');
     }
