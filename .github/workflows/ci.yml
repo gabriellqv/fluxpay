@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/fluxpay?schema=public'
+      JWT_SECRET: 'ci_jwt_secret_key_for_testing_12345'
+      JWT_EXPIRES_IN: '1d'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
+
+      - name: Typecheck backend
+        run: npm run typecheck
+        working-directory: ./backend
+
+      - name: Lint backend
+        run: npm run lint
+        working-directory: ./backend
+
+      - name: Prettier check backend
+        run: npm run format:check
+        working-directory: ./backend
+
+      - name: Test backend
+        run: npm run test
+        working-directory: ./backend
+
+      - name: Security audit backend
+        run: npm audit --audit-level=high
+        working-directory: ./backend
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Typecheck frontend
+        run: npm run typecheck
+        working-directory: ./frontend
+
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: ./frontend
+
+      - name: Prettier check frontend
+        run: npm run format:check
+        working-directory: ./frontend
+
+      - name: Test frontend
+        run: npm run test
+        working-directory: ./frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+
+      - name: Security audit frontend
+        run: npm audit --audit-level=high
+        working-directory: ./frontend
