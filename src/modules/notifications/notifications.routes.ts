@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { registry } from '../../config/swagger';
 import { authMiddleware } from '../../middlewares/auth.middleware';
+import { notificationResponseSchema, unreadCountResponseSchema } from './notifications.dtos';
 import { makeNotificationsController } from './notifications.factory';
 
 const notificationsRoutes = Router();
@@ -14,7 +15,10 @@ registry.registerPath({
   description: 'Returns all notifications for the authenticated user.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'Notifications retrieved successfully' },
+    200: {
+      description: 'Notifications retrieved successfully',
+      content: { 'application/json': { schema: notificationResponseSchema.array() } },
+    },
     401: { description: 'Unauthorized' },
   },
 });
@@ -27,7 +31,10 @@ registry.registerPath({
   description: 'Returns the total count of unread notifications for the authenticated user.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'Unread count retrieved successfully' },
+    200: {
+      description: 'Unread count retrieved successfully',
+      content: { 'application/json': { schema: unreadCountResponseSchema } },
+    },
     401: { description: 'Unauthorized' },
   },
 });
@@ -40,7 +47,10 @@ registry.registerPath({
   description: 'Marks a specific notification as read. Only the owner can mark as read.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'Notification marked as read' },
+    200: {
+      description: 'Notification marked as read',
+      content: { 'application/json': { schema: notificationResponseSchema } },
+    },
     401: { description: 'Unauthorized' },
     404: { description: 'Notification not found' },
   },

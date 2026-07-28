@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import { registry } from '../../config/swagger';
 import { authMiddleware } from '../../middlewares/auth.middleware';
-import { createTransactionSchema, getTransactionHistoryQuerySchema } from './transactions.dtos';
+import {
+  createTransactionSchema,
+  formattedTransactionResponseSchema,
+  getTransactionHistoryQuerySchema,
+  transactionHistoryResponseSchema,
+  transactionResponseSchema,
+} from './transactions.dtos';
 import { makeTransactionsController } from './transactions.factory';
 
 const transactionsRoutes = Router();
@@ -26,6 +32,7 @@ registry.registerPath({
   responses: {
     201: {
       description: 'Transaction created successfully',
+      content: { 'application/json': { schema: transactionResponseSchema } },
     },
     400: {
       description: 'Validation error or business rule violation',
@@ -51,6 +58,7 @@ registry.registerPath({
   responses: {
     200: {
       description: 'Transaction history retrieved successfully',
+      content: { 'application/json': { schema: transactionHistoryResponseSchema } },
     },
     401: {
       description: 'Unauthorized',
@@ -69,7 +77,10 @@ registry.registerPath({
     'Returns details of a specific transaction. User must be either the sender or receiver.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'Transaction details retrieved successfully' },
+    200: {
+      description: 'Transaction details retrieved successfully',
+      content: { 'application/json': { schema: formattedTransactionResponseSchema } },
+    },
     401: { description: 'Unauthorized' },
     403: { description: 'Forbidden' },
     404: { description: 'Transaction not found' },

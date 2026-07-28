@@ -2,7 +2,12 @@ import { Router } from 'express';
 import { registry } from '../../config/swagger';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { authorizeOwner } from '../../middlewares/authorizeOwner';
-import { createUserSchema, replaceUserSchema, updateUserSchema } from './users.dtos';
+import {
+  createUserSchema,
+  replaceUserSchema,
+  updateUserSchema,
+  userResponseSchema,
+} from './users.dtos';
 import { makeUsersController } from './users.factory';
 
 export const usersRoutes = Router();
@@ -24,7 +29,10 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'User created successfully' },
+    201: {
+      description: 'User created successfully',
+      content: { 'application/json': { schema: userResponseSchema } },
+    },
     400: { description: 'Validation error' },
     409: { description: 'Conflict (Email or CPF already exists)' },
   },
@@ -38,7 +46,10 @@ registry.registerPath({
   description: 'Returns the profile of the currently authenticated user based on JWT.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'User profile retrieved successfully' },
+    200: {
+      description: 'User profile retrieved successfully',
+      content: { 'application/json': { schema: userResponseSchema } },
+    },
     401: { description: 'Unauthorized' },
   },
 });
@@ -51,7 +62,10 @@ registry.registerPath({
   description: 'Returns the details of a user by ID. Only the owner can access.',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'User retrieved successfully' },
+    200: {
+      description: 'User retrieved successfully',
+      content: { 'application/json': { schema: userResponseSchema } },
+    },
     401: { description: 'Unauthorized' },
     403: { description: 'Forbidden (Not the resource owner)' },
     404: { description: 'User not found' },
@@ -75,7 +89,10 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'User updated successfully' },
+    200: {
+      description: 'User updated successfully',
+      content: { 'application/json': { schema: userResponseSchema } },
+    },
     400: { description: 'Validation error' },
     401: { description: 'Unauthorized' },
     403: { description: 'Forbidden' },
@@ -100,7 +117,10 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'User replaced successfully' },
+    200: {
+      description: 'User replaced successfully',
+      content: { 'application/json': { schema: userResponseSchema } },
+    },
     400: { description: 'Validation error' },
     401: { description: 'Unauthorized' },
     403: { description: 'Forbidden' },
