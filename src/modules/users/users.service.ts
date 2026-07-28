@@ -47,7 +47,7 @@ export class UsersService {
    * from recent transactions without excessive database queries.
    */
   async findById(id: string) {
-    const cacheKey = cacheKeys.userBalance(id);
+    const cacheKey = cacheKeys.userProfile(id);
     const cachedUser = await cacheService.get<ReturnType<typeof excludePassword>>(cacheKey);
 
     if (cachedUser) {
