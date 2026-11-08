@@ -24,7 +24,7 @@ A RESTful API for digital wallet management, financial transfers, and real-time 
 
 - **User management** -- CRUD operations for users with unique email and CPF validation, password hashing with bcrypt.
 - **Authentication** -- Login endpoint returning signed JWTs. Protected routes use Bearer token authorization middleware.
-- **Money transfers** -- Atomic transactions using Prisma `$transaction`. Validates sender, receiver, self-transfer prevention, and balance with Prisma `Decimal` precision.
+- **Money transfers** -- Atomic transactions using Prisma `$transaction`. The debit is a conditional update (`balance >= amount`) inside the transaction, both rows are locked in deterministic order, and a PostgreSQL `CHECK (balance >= 0)` constraint enforces the invariant at the database level. Concurrent transfers are covered by an integration test against a real PostgreSQL instance.
 - **Transaction history** -- Paginated endpoint returning transactions classified as `SENT` or `RECEIVED` relative to the authenticated user, with optional `?type=SENT|RECEIVED` filtering and counterparty details.
 - **Transaction details** -- Individual transaction lookup endpoint with strict ownership authorization (only sender or receiver can view).
 - **Asynchronous notifications** -- BullMQ background job queue for sending transfer notifications to receivers with automatic deduplication by transaction ID.
@@ -83,8 +83,8 @@ prisma/
 1. **Layered Architecture & Dependency Inversion:**
    Each module is structured into `routes -> controller -> service -> repository`. Services depend on interface abstractions (`IUsersRepository`, `ITransactionsRepository`, `INotificationsRepository`) rather than concrete Prisma implementations. Dependency injection is managed via clean manual factory functions (`makeUsersController`, etc.).
 
-2. **Financial Atomicity & Decimal Precision:**
-   Money transfers run inside a single interactive Prisma transaction (`prisma.$transaction`). Balance updates use Prisma's atomic `decrement` and `increment` operations to prevent race conditions. Balance comparisons use `Prisma.Decimal.lessThan()` to guarantee high precision for financial operations.
+2. **Financial Atomicity & the Non-Negative Balance Invariant:**
+   Transfers run inside a single interactive Prisma transaction. The service performs a fast-path balance check to return a friendly error, but the authoritative check is the conditional `UPDATE ... WHERE id = $1 AND balance >= $2` executed through Prisma's `updateMany`: the check and the debit are one atomic statement, so two concurrent transfers cannot overdraw the account. Both user rows are locked with `SELECT ... FOR UPDATE` in ascending id order, which prevents deadlocks between simultaneous A→B and B→A transfers. A `CHECK ("balance" >= 0)` constraint added by migration is the final safety net, and `CHECK ("amount" > 0)` rejects zero or negative transfers. See `src/modules/transactions/transactions.concurrency.spec.ts` for the proof against a real database.
 
 3. **Cache-Aside Pattern & Pattern Invalidation:**
    User profiles and transaction history pages are cached in Redis with short TTLs (60s and 30s). When a transfer occurs, cache keys for both sender and receiver profiles are invalidated, and all cached history pages are purged using pattern invalidation (`user:<id>:history:*`).
@@ -199,9 +199,13 @@ The server runs at `http://localhost:3000/v1` by default. Swagger documentation 
 
 Unit and integration tests cover all modules (`AuthService`, `UsersService`, `TransactionsService`, `NotificationsService`, and E2E routes).
 
-Run the test suite:
+Most suites mock Prisma to stay fast. The concurrency suite (`transactions.concurrency.spec.ts`) intentionally does not: it runs against a real PostgreSQL and proves that 10 parallel transfers against a balance that only supports 5 result in exactly 5 successes, 5 `INSUFFICIENT_FUNDS` errors and a final balance of zero. It also asserts that simultaneous A→B and B→A transfers do not deadlock.
+
+Start PostgreSQL and apply the migrations before running the full suite:
 
 ```bash
+docker compose up -d database
+npx prisma migrate deploy
 npm run test
 ```
 
@@ -219,4 +223,4 @@ npm run test
 
 ## Continuous Integration
 
-The GitHub Actions CI pipeline runs on pushes and pull requests to `main` and `develop` branches. It executes: dependency installation, type checking, linting, format checking, test execution, and security dependency auditing (`npm audit`).
+The GitHub Actions CI pipeline runs on pushes and pull requests to `main` and `develop` branches. It provisions a PostgreSQL service container, applies the Prisma migrations, then runs type checking, linting, format checking, the full test suite (including the real-database concurrency test) and the security dependency audit (`npm audit`).
