@@ -91,8 +91,10 @@ describe('Transactions E2E', () => {
 
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         return (callback as (tx: unknown) => unknown)({
+          $queryRaw: vi.fn().mockResolvedValue([]),
           user: {
             update: vi.fn(),
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           transaction: {
             create: vi.fn().mockResolvedValue(createdTx),

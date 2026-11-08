@@ -38,6 +38,12 @@ export class TransactionsService {
    * Validation order matters: self-transfer is checked first (cheapest),
    * then sender/receiver existence (parallel lookup), then balance.
    *
+   * The balance check below is a fast path that returns a friendly error
+   * without opening a transaction. It is **not** the guarantee: another
+   * transfer can commit between this read and the debit. The authoritative
+   * check is the conditional `updateMany` inside `TransactionsRepository.create`,
+   * which only debits when `balance >= amount` in the same statement.
+   *
    * The actual balance update and transaction creation happen inside a
    * single Prisma interactive transaction to guarantee atomicity.
    *
@@ -65,6 +71,8 @@ export class TransactionsService {
       throw new AppError('Destinatário não encontrado', 404, 'RECEIVER_NOT_FOUND');
     }
 
+    // Fast path. The database enforces the same rule atomically; see
+    // TransactionsRepository.create for why this check alone is not enough.
     if (sender.balance.lessThan(amount)) {
       throw new AppError('Saldo insuficiente', 400, 'INSUFFICIENT_FUNDS');
     }
