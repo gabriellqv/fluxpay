@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "ci:local": "bash scripts/ci-local.sh",
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint \"src/**/*.ts\"",

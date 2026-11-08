@@ -1,0 +1,8 @@
+# Local GitHub Actions runner configuration.
+#
+# `act` is used to validate the CI workflow before pushing a branch, so a red
+# pipeline is caught locally instead of on GitHub. The host network is required
+# because the workflow's PostgreSQL service is reached at `localhost:5432`.
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--container-architecture linux/amd64
+--network host
